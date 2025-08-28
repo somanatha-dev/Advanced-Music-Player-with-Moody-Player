@@ -1,7 +1,19 @@
-import './MoodSongs.css';
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef } from "react";
+import { FiPlay, FiPause } from "react-icons/fi";
+import "./MoodSongs.css"; // keep if you still need extra rules; otherwise you can remove this import
 
-const MoodSongs = ({ Songs }) => {
+const moodEmoji = (m) =>
+  ({
+    happy: "😄",
+    sad: "😕",
+    neutral: "🙂",
+    angry: "😡",
+    surprised: "😮",
+    disgusted: "🤢",
+    fearful: "😨",
+  }[m] || "🎵");
+
+export default function MoodSongs({ Songs = [], mood }) {
   const [isPlaying, setIsPlaying] = useState(null);
   const audioRefs = useRef([]);
 
@@ -10,40 +22,58 @@ const MoodSongs = ({ Songs }) => {
       audioRefs.current[index]?.pause();
       setIsPlaying(null);
     } else {
-      if (isPlaying !== null) {
-        audioRefs.current[isPlaying]?.pause();
-      }
+      if (isPlaying !== null) audioRefs.current[isPlaying]?.pause();
       audioRefs.current[index]?.play();
       setIsPlaying(index);
     }
   };
 
   return (
-    <div className="mood-songs">
-      <h2>Recommended Songs</h2>
-      <ul>
+    <>
+      <h3 className="section-title">Mood & Recommendations</h3>
+
+      {/* Mood Badge */}
+      <div className="mood-chip" style={{ marginBottom: 10 }}>
+        <span style={{ fontSize: 18 }}>{moodEmoji(mood)}</span>
+        <span style={{ marginLeft: 10 }}>
+          {mood ? mood[0].toUpperCase() + mood.slice(1) : "No mood detected"}
+        </span>
+      </div>
+
+      {/* Songs List */}
+      <div className="list">
+        {Songs.length === 0 && (
+          <p className="muted">Click “Detect Mood” to load recommendations.</p>
+        )}
+
         {Songs.map((song, index) => (
-          <li className="song" key={index}>
-            <div className="title">
-              <h3>{song.title}</h3>
-              <p>{song.artist}</p>
+          <div className="song-card" key={`${song.title}-${index}`}>
+            {/* Cover (fallback to emoji) */}
+            {song.image ? (
+              <img src={song.image} alt={song.title} className="cover" />
+            ) : (
+              <div className="cover">{moodEmoji(mood)}</div>
+            )}
+
+            {/* Text */}
+            <div className="meta">
+              <div className="title">{song.title}</div>
+              <div className="artist">{song.artist}</div>
             </div>
+
+            {/* Player */}
             <div className="play-pause-button">
               <audio
                 ref={(el) => (audioRefs.current[index] = el)}
                 src={song.audio}
               />
-              <button onClick={() => handlePlayPause(index)}>
-                {isPlaying === index
-                  ? <i className="ri-pause-line"></i>
-                  : <i className="ri-play-circle-line"></i>}
+              <button className="icon-btn" onClick={() => handlePlayPause(index)} title="Play/Pause">
+                {isPlaying === index ? <FiPause /> : <FiPlay />}
               </button>
             </div>
-          </li>
+          </div>
         ))}
-      </ul>
-    </div>
+      </div>
+    </>
   );
-};
-
-export default MoodSongs;
+}
